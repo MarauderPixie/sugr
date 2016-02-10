@@ -13,7 +13,7 @@ library(RColorBrewer)
   # sugr <- read_csv("./export3.csv",
   #                    col_types = cols(Zeit = col_character()), na = c("", "NA"), n_max = 174)
 
-sugr <- read.csv("./export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE)
+sugr <- read.csv("./data/export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE)
 sugr <- sugr[c(1:174), ]
 
   # Fehler ablegen:
