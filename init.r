@@ -10,14 +10,14 @@ library(RColorBrewer)
 
 # einlesen, dabei class overriden:
   # stellt sich raus: base-r macht das besser
-  # report <- read_csv("./export3.csv",
+  # sugr <- read_csv("./export3.csv",
   #                    col_types = cols(Zeit = col_character()), na = c("", "NA"), n_max = 174)
 
-report <- read.csv("./export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE)
-report <- report[c(1:174), ]
+sugr <- read.csv("./export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE)
+sugr <- sugr[c(1:174), ]
 
   # Fehler ablegen:
-  # Zeit <- problems(report)
+  # Zeit <- problems(sugr)
 
 # Redundant, aber rgendwie ganz interessant:
 #
@@ -26,15 +26,15 @@ report <- report[c(1:174), ]
 
 
 # unnütze Spalten loswerden, Rest umbenennen und Klassen geradebiegen:
-report <- report %>% 
+sugr <- sugr %>% 
   select(-Bolusinjektionseinheiten..Pen., -Basalinjektionseinheiten, -Mahlzeitbeschreibung,
          -Aktivitätsintensität..1..Bequem..2..Normal..3..Anstrengend., -Schritte, -Notiz, -Ort, 
          -Blutdruck, -Körpergewicht..kg., -Ketone, -Medikamente)
 
-colnames(report) <- c("Datum", "Zeit", "Tags", "Messung", "Bolus_Pumpe", "Bolus_Essen", "Bolus_Korrektur",
+colnames(sugr) <- c("Datum", "Zeit", "Tags", "Messung", "Bolus_Pumpe", "Bolus_Essen", "Bolus_Korrektur",
                       "Bolus_Temp_p", "Bolus_Temp_t", "BE", "Aktivitaetsdauer", "Notiz", "HbA1c", "Zutaten")
 
-report <- report %>% 
+sugr <- sugr %>% 
   mutate(Tags         = recode(Tags, "'' = NA"),
          Bolus_Temp_p = recode(Bolus_Temp_p, "'' = NA"),
          Notiz        = recode(Notiz, "'' = NA"),
