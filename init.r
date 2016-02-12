@@ -1,5 +1,6 @@
 # benutzte packages:
 library(readr)
+library(magrittr)
 library(dplyr)
 library(car)
 library(lubridate)
@@ -40,7 +41,10 @@ sugr <- sugr %>%
          Notiz        = recode(Notiz, "'' = NA"),
          Zutaten      = recode(Zutaten, "'' = NA"),
          Datum        = as.Date(Datum, "%d.%m.%Y"),
-         Zeit         = ymd_hms(paste(Datum, Zeit)))
+         Zeit         = ymd_hms(paste(Datum, Zeit)),
+         Tag          = wday(Zeit, T, F),
+         Monat        = month(Zeit, T, T),
+         Stunde       = hour(Zeit))
 
 
 # Basalraten Dataframe bauen:

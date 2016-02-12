@@ -1,0 +1,38 @@
+---
+title: "Blutzuckeranalyse"
+author: "Tobias Anton"
+date: "`r system(command = 'ddate', intern = T)`"
+output: 
+  html_document: 
+    fig_width: 10
+    highlight: tango
+    theme: spacelab
+---
+
+```{r, message=F, warning=FALSE, include=FALSE}
+source(paste0(Sys.getenv("PROJECT_HOME"), "./init.r"))
+knitr::opts_chunk$set(echo = F, fig.path = "plots/", warning = F, message = F)
+```
+
+## Glancing at the data
+
+### Average Glucose Level by Weekday
+
+```{r tbl_BZ_by_day}
+sugr %>% 
+  group_by(Tag) %>% 
+  summarize("avg. mg/dl" = round(mean(Messung, na.rm = T), 0),
+            "SD mg/dl"   = round(sd(Messung, na.rm = T), 0)) %>% 
+  knitr::kable()
+```
+
+Not sure if alarming health-wise, but from a data-wise viewpoint those SDs really are awful.
+
+```{r plot_BZ_by_day}
+sugr %>% 
+  group_by(Tag) %>% 
+  summarize("avg. mg/dl" = round(mean(Messung, na.rm = T), 0),
+            "SD mg/dl"   = round(sd(Messung, na.rm = T), 0)) %>% 
+  ggplot(., aes(x = Tag, y = 'avg. mg/dl', group = Tag)) +
+    geom_point(stat = "identity")
+```
