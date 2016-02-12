@@ -26,13 +26,16 @@ sugr %>%
   knitr::kable()
 ```
 
-Not sure if alarming health-wise, but from a data-wise viewpoint those SDs really are awful.
+Not sure if alarming health-wise, but from a data-wise viewpoint those SDs really are awful:
 
 ```{r plot_BZ_by_day}
 sugr %>% 
   group_by(Tag) %>% 
-  summarize("avg. mg/dl" = round(mean(Messung, na.rm = T), 0),
-            "SD mg/dl"   = round(sd(Messung, na.rm = T), 0)) %>% 
-  ggplot(., aes(x = Tag, y = 'avg. mg/dl', group = Tag)) +
-    geom_point(stat = "identity")
+  summarize("mean" = round(mean(Messung, na.rm = T), 0),
+            "SD"   = round(sd(Messung, na.rm = T), 0)) %>% 
+  ggplot(., aes(x = Tag, y = mean)) +
+    geom_point(stat = "identity") +
+    geom_errorbar(aes(ymin = mean - SD, ymax = mean + SD)) +
+    labs(x = "", y = "Glucose level (mg/dl)") +
+    theme_bw()
 ```
