@@ -37,5 +37,19 @@ sugr %>%
     geom_point(stat = "identity") +
     geom_errorbar(aes(ymin = mean - SD, ymax = mean + SD)) +
     labs(x = "", y = "Glucose level (mg/dl)") +
-    theme_bw()
+    theme_tufte()
+```
+
+Heatmapping Glucose-Levels by day & hour seems like a good idea:
+
+```{r plot_heatmap_d_h}
+ggplot(sugr, aes(x = Stunde, y = Tag, fill = Messung)) +
+  geom_tile(color = "white", size = 0.1) +
+  scale_fill_viridis(name = "Glucose Level (mg/dl)") +
+  labs(x = NULL, y = NULL, title = "Glucose Levels per day and hour") +
+  scale_x_continuous(breaks = 0:23) +
+  coord_equal() + theme_tufte() +
+  theme(legend.title    = element_text(size = 12),
+        legend.text     = element_text(size = 10),
+        legend.position = "bottom")
 ```

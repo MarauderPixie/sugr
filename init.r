@@ -8,6 +8,8 @@ library(ggplot2)
 library(tidyr)
 library(broom)
 library(RColorBrewer)
+library(ggthemes)
+library(viridis)
 
 # einlesen, dabei class overriden:
   # stellt sich raus: base-r macht das besser
