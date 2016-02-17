@@ -53,3 +53,14 @@ ggplot(sugr, aes(x = Stunde, y = Tag, fill = Messung)) +
         legend.text     = element_text(size = 10),
         legend.position = "bottom")
 ```
+
+Prettyplots
+
+```{r pp}
+sugr %>% 
+  filter(Tag == "Monday") %>% 
+  ggplot(., aes(x = Stunde, y = Messung, color = Messung)) +
+    geom_point(size = 5, alpha = 0.6) +
+    scale_x_continuous(breaks = 0:23) +
+    theme_tufte()
+```
