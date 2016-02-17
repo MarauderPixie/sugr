@@ -1,7 +1,7 @@
 ---
 title: "Blutzuckeranalyse"
 author: "Tobias Anton"
-date: "`r system(command = 'ddate', intern = T)`"
+date: "`r ddateR::poee()`"
 output: 
   html_document: 
     fig_width: 10
@@ -61,6 +61,8 @@ sugr %>%
   filter(Tag == "Monday") %>% 
   ggplot(., aes(x = Stunde, y = Messung, color = Messung)) +
     geom_point(size = 5, alpha = 0.6) +
+    scale_color_viridis() +
     scale_x_continuous(breaks = 0:23) +
+    labs(title = "Monday") +
     theme_tufte()
 ```

@@ -16,7 +16,7 @@ library(viridis)
   # sugr <- read_csv("./export3.csv",
   #                    col_types = cols(Zeit = col_character()), na = c("", "NA"), n_max = 174)
 
-sugr <- read.csv("./data/export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE)
+sugr <- read.csv("./data/export3.csv", encoding = "UTF-8", dec = ",", stringsAsFactors = FALSE, fileEncoding = "UTF-8")
 sugr <- sugr[c(1:174), ]
 
   # Fehler ablegen:
@@ -31,8 +31,8 @@ sugr <- sugr[c(1:174), ]
 # unnütze Spalten loswerden, Rest umbenennen und Klassen geradebiegen:
 sugr <- sugr %>% 
   select(-Bolusinjektionseinheiten..Pen., -Basalinjektionseinheiten, -Mahlzeitbeschreibung,
-         -Aktivitätsintensität..1..Bequem..2..Normal..3..Anstrengend., -Schritte, -Notiz, -Ort, 
-         -Blutdruck, -Körpergewicht..kg., -Ketone, -Medikamente)
+         -Aktivit.e4.tsintensit.e4.t..1..Bequem..2..Normal..3..Anstrengend., -Schritte, -Notiz, -Ort, 
+         -Blutdruck, -K.f6.rpergewicht..kg., -Ketone, -Medikamente)
 
 colnames(sugr) <- c("Datum", "Zeit", "Tags", "Messung", "Bolus_Pumpe", "Bolus_Essen", "Bolus_Korrektur",
                       "Bolus_Temp_p", "Bolus_Temp_t", "BE", "Aktivitaetsdauer", "Notiz", "HbA1c", "Zutaten")
