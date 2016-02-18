@@ -18,6 +18,8 @@ knitr::opts_chunk$set(echo = F, fig.path = "plots/", warning = F, message = F)
 
 ### Average Glucose Level by Weekday
 
+#### Table
+
 ```{r tbl_BZ_by_day}
 sugr %>% 
   group_by(Tag) %>% 
@@ -25,6 +27,8 @@ sugr %>%
             "SD mg/dl"   = round(sd(Messung, na.rm = T), 0)) %>% 
   knitr::kable()
 ```
+
+#### Plot (with SDs and average over all days)
 
 Not sure if alarming health-wise, but from a data-wise viewpoint those SDs really are awful:
 
@@ -34,11 +38,15 @@ sugr %>%
   summarize("mean" = round(mean(Messung, na.rm = T), 0),
             "SD"   = round(sd(Messung, na.rm = T), 0)) %>% 
   ggplot(., aes(x = Tag, y = mean)) +
+    geom_hline(yintercept = mean(sugr$Messung, na.rm = T),
+               color = "gray", alpha = 0.6) +
+    geom_errorbar(aes(ymin = mean - SD, ymax = mean + SD, color = SD)) +
     geom_point(stat = "identity") +
-    geom_errorbar(aes(ymin = mean - SD, ymax = mean + SD)) +
     labs(x = "", y = "Glucose level (mg/dl)") +
     theme_tufte()
 ```
+
+#### Heatmap
 
 Heatmapping Glucose-Levels by day & hour seems like a good idea:
 
@@ -54,9 +62,11 @@ ggplot(sugr, aes(x = Stunde, y = Tag, fill = Messung)) +
         legend.position = "bottom")
 ```
 
-Prettyplots
+#### Scatterplots
 
-```{r pp}
+Not exactly informative or exhaustive, but quite pretty.
+
+```{r scatter_day}
 sugr %>% 
   filter(Tag == "Monday") %>% 
   ggplot(., aes(x = Stunde, y = Messung, color = Messung)) +
@@ -64,5 +74,67 @@ sugr %>%
     scale_color_viridis() +
     scale_x_continuous(breaks = 0:23) +
     labs(title = "Monday") +
+    theme_tufte()
+```
+
+
+### Average Glucose Level per Month
+
+#### Table
+
+```{r tbl_BZ_by_month}
+sugr %>% 
+  group_by(Monat) %>% 
+  summarize("avg. mg/dl" = round(mean(Messung, na.rm = T), 0),
+            "SD mg/dl"   = round(sd(Messung, na.rm = T), 0)) %>% 
+  knitr::kable()
+```
+
+#### Plot (with SDs and average over all months)
+
+Not sure if alarming health-wise, but from a data-wise viewpoint those SDs really are awful:
+
+```{r plot_BZ_by_month}
+sugr %>% 
+  group_by(Monat) %>% 
+  summarize("mean" = round(mean(Messung, na.rm = T), 0),
+            "SD"   = round(sd(Messung, na.rm = T), 0)) %>% 
+  ggplot(., aes(x = Monat, y = mean)) +
+    geom_hline(yintercept = mean(sugr$Messung, na.rm = T),
+               color = "gray", alpha = 0.6) +
+    geom_errorbar(aes(ymin = mean - SD, ymax = mean + SD, color = SD)) +
+    geom_point(stat = "identity") +
+    labs(x = "", y = "Glucose level (mg/dl)") +
+    theme_tufte()
+```
+
+#### Heatmap
+
+Heatmapping Glucose-Levels by day & hour seems like a good idea:
+
+```{r plot_heatmap_m_h}
+ggplot(sugr, aes(x = Stunde, y = Monat, fill = Messung)) +
+  geom_tile(color = "white", size = 0.1) +
+  scale_fill_viridis(name = "Glucose Level (mg/dl)") +
+  labs(x = NULL, y = NULL, title = "Glucose Levels per day and hour") +
+  scale_x_continuous(breaks = 0:23) +
+  coord_equal() + theme_tufte() +
+  theme(legend.title    = element_text(size = 12),
+        legend.text     = element_text(size = 10),
+        legend.position = "bottom")
+```
+
+#### Scatterplots
+
+Not exactly informative or exhaustive, but quite pretty.
+
+```{r scatter_month}
+sugr %>% 
+  filter(Monat == "Dec") %>% 
+  ggplot(., aes(x = Stunde, y = Messung, color = Messung)) +
+    geom_point(size = 5, alpha = 0.6) +
+    scale_color_viridis() +
+    scale_x_continuous(breaks = 0:23) +
+    labs(title = "December") +
     theme_tufte()
 ```
