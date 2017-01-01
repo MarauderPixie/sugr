@@ -48,7 +48,11 @@ names(sugr) <- recode(names(sugr),
   `BolusExpert: Aktives Insulin (IE)`           = "BE_aktives_Insulin"
   )
 
+
 ## well, set labels
 sugr <- set_label(sugr, labels)
 rm(labels)
 
+
+## save to file
+saveRDS(sugr, "./data/sugr.rds")
