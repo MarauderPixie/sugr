@@ -49,10 +49,41 @@ names(sugr) <- recode(names(sugr),
   )
 
 
+## replace commas with points & convert to numeric
+sugr <- sugr %>% 
+  mutate(Bolus_gewaehlt  = as.numeric(str_replace(Bolus_gewaehlt, ",", ".")),
+         Bolus_abgegeben = as.numeric(str_replace(Bolus_abgegeben, ",", ".")),
+         BE_Schaetzung   = as.numeric(str_replace(BE_Schaetzung, ",", ".")),
+         BE_Korrektur    = as.numeric(str_replace(BE_Korrektur, ",", ".")),
+         BE_Nahrung      = as.numeric(str_replace(BE_Nahrung, ",", ".")),
+         BE_aktives_Insulin = as.numeric(str_replace(BE_aktives_Insulin, ",", ".")))
+
+
+## add some info
+sugr <- sugr %>% 
+  mutate(Monat      = month(Zeitstempel, label = T, abbr = F),
+         Wochentag  = wday(Datum, label = T, abbr = F),
+         BZ_Bereich = cut(BZ_Wert, breaks = c(-Inf, 80, 160, Inf), ordered_result = T,
+                          labels = c("zu niedrig", "in Ordnung", "zu hoch")))
+
+
 ## well, set labels
-sugr <- set_label(sugr, labels)
+sugr <- set_label(sugr, c(labels, "Monat", "Wochentag", "Blutzuckerbereich"))
 rm(labels)
+
+
+## create Basalraten-Dataframe
+base <- data.frame(
+  Uhrzeit = parse_time(
+    format(seq(ISOdatetime(2017, 1, 2, 1, 0, 0), 
+               ISOdatetime(2017, 1, 3, 00, 00, 00), 
+               by = 60*60), "%H:%M"),
+    format = "%H:%M"),
+  Rate_1  = c(0.35, 0.35, 0.6, 0.725, 0.75, 0.75, 0.675, 0.6, 0.7,
+              0.75, 0.7, 0.7, 0.575, 0.6, 0.55, 0.375, 0.35, rep(0.3, 7))
+)
 
 
 ## save to file
 saveRDS(sugr, "./data/sugr.rds")
+saveRDS(base, "./data/base.rds")
