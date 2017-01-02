@@ -8,7 +8,7 @@ output:
     lib_dir: "assets"
     fig_width: 10
     dpi: 540
-    theme: cosmo
+    theme: sandstone
 ---
 
 ```{r init, echo = F, message=F, warning=F}
@@ -20,8 +20,115 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(ggthemes)
+library(plotly)
+library(viridis)
 library(sjPlot)
 
 ## read data
 sugr <- readRDS("./data/sugr.rds")
+base <- readRDS("./data/base.rds")
+
+## prepare cosmetics
+theme_set(tadaatoolbox::theme_readthedown(bg = "#FFFFFF") +
+            theme(legend.position = "top"))
+```
+
+
+# Rahmendaten
+
+## BE-Faktor
+
+Zeitraum      | IE/BE
+--------------|--------
+ 0:00 -  8:00 | 1,5
+ 8:00 - 12:00 | 1.25
+12:00 - 14:00 | 1.7
+14:00 - 15:30 | 1.5
+15:30 - 18:00 | 1.15
+18:00 - 24:00 | 1.5
+
+
+## Basalratenprofil(e)
+
+```{r rahmen_base1}
+ggplot(base, aes(x = Uhrzeit, y = Rate_1, group = 1)) +
+  geom_line(linejoin = "round") +
+  geom_point(size = 3, color = "cadetblue") +
+  labs(x = "Uhrzeit", y = "Basalrate (IE/h)", 
+       title = "Basalratenprofil 1", 
+       subtitle = paste("Tagesgesamtmenge:", sum(base$Rate_1), "IE"))
+
+
+hover <- ~paste0("bis ", Uhrzeit, " Uhr:",
+                 "<br /><b>", Rate_1, " IE</b>")
+
+plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_1) %>%
+  add_lines(color = I("black")) %>% 
+  add_markers(color = I("cadetblue"), size = I(12), 
+              hoverinfo = "hover", text = hover) %>% 
+  layout(title = "Basalratenprofil 1", xaxis = list(title = "Uhrzeit"),
+         yaxis = list(title = "Basalrate (IE/h)"), hovermode = "closest",
+         autosize = T, showlegend = F)
+```
+
+# Blutzuckerverläufe
+
+## Alle Messungen
+
+```{r BZ_Gesamt}
+sugr %>% 
+  filter(BZ_Wert < 350, !is.na(BZ_Wert)) %>% 
+  ggplot(aes(x = Zeit, y = BZ_Wert, color = BZ_Wert)) + 
+    annotate("rect", fill = "black", alpha = .1,
+             xmin = 7201, xmax = 28800, ymin = 0, ymax= Inf) +
+    geom_point(size = 1.5) +
+    geom_smooth(method = "loess", color = "cadetblue", fill = "cadetblue", alpha = 0.2) +
+    geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+    scale_x_continuous(labels = seq(0, 24, 4), 
+                       breaks = seq(0, 86400, 14400), 
+                       minor_breaks = seq(0, 86400, 7200)) +
+    labs(x = "Uhrzeit", y = "Blutzucker (mg/dl)", color = "Blutzucker (mg/dl)") +
+    scale_color_viridis()
+```
+
+
+## pro Tag
+
+```{r BZ_pro_Tag, fig.height=12}
+sugr %>% 
+  filter(BZ_Wert < 350, !is.na(BZ_Wert)) %>% 
+  ggplot(aes(x = Zeit, y = BZ_Wert, color = BZ_Wert)) + 
+    annotate("rect", fill = "black", alpha = .1,
+             xmin = 7201, xmax = 28800, ymin = 0, ymax= Inf) +
+    geom_point(size = 2) +
+    geom_smooth(method = "loess", color = "cadetblue", fill = "cadetblue", alpha = 0.2) +
+    geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+    scale_x_continuous(labels = seq(0, 24, 4), 
+                       breaks = seq(0, 86400, 14400), 
+                       minor_breaks = seq(0, 86400, 7200)) +
+    labs(x = "Uhrzeit", y = "Blutzucker (mg/dl)", color = "Blutzucker (mg/dl)") +
+    facet_wrap(~Wochentag, ncol = 2) +
+    scale_color_viridis()
+```
+
+
+## schräge _BolusExpert_-Messungen
+
+```{r BZ_BE}
+sugr %>% 
+  gather(Messung, Wert, BZ_Wert, BE_BZ) %>% 
+  mutate(Messung = recode(Messung, "BE_BZ" = "BolusExpert", "BZ_Wert" = "Regulär")) %>% 
+  filter(Wert > 0) %>% 
+  ggplot(aes(x = Zeit, y = Wert, color = Messung, fill = Messung)) +
+    annotate("rect", fill = "black", alpha = .1,
+             xmin = 7201, xmax = 28800, ymin = 0, ymax= Inf) +
+    geom_point(size = 1.5) +
+    geom_smooth(method = "loess", alpha = .2) +
+    geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+    scale_x_continuous(labels = seq(0, 24, 4), 
+                       breaks = seq(0, 86400, 14400), 
+                       minor_breaks = seq(0, 86400, 7200)) +
+    labs(x = "Uhrzeit", y = "Blutzucker (mg/dl)") +
+    scale_color_viridis(discrete = T) +
+    scale_fill_viridis(discrete = T)
 ```
