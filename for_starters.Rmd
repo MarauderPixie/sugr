@@ -23,13 +23,15 @@ library(ggthemes)
 library(plotly)
 library(viridis)
 library(sjPlot)
+library(tadaatoolbox)
 
 ## read data
-sugr <- readRDS("./data/sugr.rds")
-base <- readRDS("./data/base.rds")
+sugr    <- readRDS("./data/sugr.rds")
+base    <- readRDS("./data/base.rds")
+bexpert <- readRDS("./data/bexpert.rds")
 
 ## prepare cosmetics
-theme_set(tadaatoolbox::theme_readthedown(bg = "#FFFFFF") +
+theme_set(theme_readthedown(bg = "#FFFFFF") +
             theme(legend.position = "top"))
 ```
 
@@ -131,4 +133,44 @@ sugr %>%
     labs(x = "Uhrzeit", y = "Blutzucker (mg/dl)") +
     scale_color_viridis(discrete = T) +
     scale_fill_viridis(discrete = T)
+```
+
+
+# Bolus & BEs
+
+## Bolusarten
+
+Unter _"Bolusarten"_ verstehe ich die drei verschiedenen Modi, in denen die Pumpe die Abgabe festhält:
+
+1. die von _BolusExpert_ geschätzte Insulinmenge, die benötigt wird
+2. die von der Pumpe angeforderte Menge Insulin
+3. die **tatsächlich** abgegebene Menge Insulin
+
+Die angeforderte und die tatsächlich abgegebene Menge ist erwatungsgemäß Deckungsgleich ($r =$ `r cor(sugr$Bolus_abgegeben, sugr$Bolus_gewaehlt, use = "complete.obs")`), dementsprechend werden für die weiteren Beobachtungen jeweils die Werte der tatsächlich abgegebenen Menge verwendet.  
+Spannender ist der Unterschied zwischen der _BolusExpert_-Schätzung und der abgegebenen Menge: Zum einen sind die Werte erstaunlich oft **nicht** identisch und zum anderen tauchen mal diese und mal jene auf:
+
+```{r Bolusarten_Messungen}
+sugr %>% 
+  gather(Messung, Bolus, Bolus_abgegeben, BE_Schaetzung) %>% 
+  select(Zeitstempel, Messung, Bolus) %>% 
+  filter(!is.na(Bolus)) %>% 
+  mutate(Messung = recode(Messung, "BE_Schaetzung" = "BolusExpert", "Bolus_abgegeben" = "tatsächlich abgegeben")) %>% 
+  ggplot(aes(x = Zeitstempel, y = Bolus, color = Messung)) + 
+    geom_point(alpha = 0.5) +
+    labs(title = "Abgegebene Menge Insulin",
+         subtitle = "nach Art der Messung",
+         x = "Datum", y = "Bolus (IE)") +
+    scale_color_viridis(discrete = T)
+```
+
+Was genau der Unterschied zwischen den beiden Varianten ist, ist mir noch unklar. Ein t-Test auf die Modi ergibt zumindest weder ein signifikantes Ergebnis, noch eine nennenswerte Effektröße, und das trotz der verhältnismäßig großen Gruppen von jeweils etwa 235 Beobachtungen:
+
+```{r Bolusarten_t_test}
+t_test <- sugr %>% 
+  gather(Messung, Bolus, Bolus_abgegeben, BE_Schaetzung) %>% 
+  mutate(Messung = recode(Messung, "BE_Schaetzung" = "BolusExpert", "Bolus_abgegeben" = "tatsächlich abgegeben")) %>% 
+  filter(!is.na(Bolus))
+
+tadaa_t.test(t_test, Bolus, Messung, print = "markdown")
+rm(t_test)
 ```
