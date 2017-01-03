@@ -1,5 +1,6 @@
 ## unleash the toolses!
 library(readr)
+library(stringr)
 library(lubridate)
 library(dplyr)
 library(tidyr)
@@ -18,9 +19,12 @@ sugr <- read_csv(
                     Unterbrechen              = col_skip(), 
                     Zeit                      = col_time(format = "%H:%M:%S"), 
                     Zeitstempel               = col_datetime(format = "%d.%m.%y %H:%M:%S"),
-                    `ID des verb. BZ-Messgeräts`  = col_skip(), 
-                    `Dauer Temp Basal (hh:mm:ss)` = col_time(format = "%H:%M:%S")), 
-  skip = 10)[1:22] 
+                   `ID des verb. BZ-Messgeräts`  = col_skip(), 
+                   `Dauer Temp Basal (hh:mm:ss)` = col_time(format = "%H:%M:%S"),
+                   `BolusExpert: Hoher BZ-Grenzwert (mg/dl)`     = col_skip(), 
+                   `BolusExpert: Niedriger BZ-Grenzwert (mg/dl)` = col_skip(), 
+                   `BolusExpert: Korrekturfaktor (mg/dl)`        = col_skip()), 
+  skip = 10)[1:19] 
 
 
 ## extract labels for later use
@@ -37,10 +41,7 @@ names(sugr) <- recode(names(sugr),
   `Bolusdauer (hh:mm:ss)`                       = "Bolusdauer",
   `Abgegebenes Füllvolumen (IE)`                = "Abgegebene_Fuellung",
   `BolusExpert-Schätzung (IE)`                  = "BE_Schaetzung",
-  `BolusExpert: Hoher BZ-Grenzwert (mg/dl)`     = "BE_Grenzwert_hi",
-  `BolusExpert: Niedriger BZ-Grenzwert (mg/dl)` = "BE_Grenzwert_lo",
   `BolusExpert: KH-Faktor (Gramm)`              = "BE_KH_Faktor_gramm",
-  `BolusExpert: Korrekturfaktor (mg/dl)`        = "BE_Korrekturfaktor",
   `BolusExpert: KH-Eingabe (Gramm)`             = "BE_KH",
   `BolusExpert: BZ-Eingabe (mg/dl)`             = "BE_BZ",
   `BolusExpert: Geschätzte Korrektur (IE)`      = "BE_Korrektur",
@@ -84,6 +85,17 @@ base <- data.frame(
 )
 
 
+## filter for BolusExpert data & "fix" decimals
+bexpert <- filter(sugr, !is.na(BE_KH))
+
+bexpert$BE_KH[nchar(bexpert$BE_KH) > 2] <- 
+  bexpert$BE_KH[nchar(bexpert$BE_KH) > 2] / 10
+
+bexpert$BE_KH_Faktor_gramm[nchar(bexpert$BE_KH_Faktor_gramm) > 2] <- 
+  bexpert$BE_KH_Faktor_gramm[nchar(bexpert$BE_KH_Faktor_gramm) > 2] / 10
+
+
 ## save to file
 saveRDS(sugr, "./data/sugr.rds")
 saveRDS(base, "./data/base.rds")
+saveRDS(bexpert, "./data/bexpert.rds")
