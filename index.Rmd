@@ -11,3 +11,9 @@ This is my attempt to keep track of my Glucose levels and insulin intakes and al
 
 My pump model is: **Medtronic MiniMed 640G**  
 My Glucose Meter is: **Medtronic Contour next link**
+
+
+## To-Do:
+
+- translate stuff
+- maybe switch theme to `sandstone`

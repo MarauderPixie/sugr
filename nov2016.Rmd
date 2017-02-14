@@ -1,19 +1,13 @@
 ---
 title: "Blood Glucose Diary of November 2016"
 output: 
-  html_document:
-    toc: true
-    toc_float: true
-    self_contained: no
-    lib_dir: "assets"
-    fig_width: 10
-    dpi: 540
-    theme: sandstone
+  html_document
 ---
 
 ```{r init, echo = F, message=F, warning=F}
 ## knitr options setzen
-knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center")
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
+                      fig.path = "assets/nov2016_files/")
 
 ## toolbox etc
 library(dplyr)

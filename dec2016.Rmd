@@ -6,7 +6,8 @@ output:
 
 ```{r init, echo = F, message=F, warning=F}
 ## knitr options setzen
-knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center")
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
+                      fig.path = "assets/dec2016_files/")
 
 ## toolbox etc
 library(dplyr)
