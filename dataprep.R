@@ -8,17 +8,19 @@ library(sjmisc)
 
 
 ## read & trim data
-sugr <- read_csv(
-  "~/Dokumente/tadaa-data/sugr/data/CareLink-Export-nov2016.csv", 
+alt_bexpert <- readRDS("./data/all_bexpert.rds")
+alt <- readRDS("./data/all_sugr.rds")
+neu <- read_csv(
+  "~/Dokumente/tadaa-data/sugr/data/neu.csv", 
   col_types = cols(`Art d. tempor. Basalrate` = col_skip(), 
                    `Bolusdauer (hh:mm:ss)`    = col_time(format = "%H:%M:%S"), 
-                    Datum                     = col_date(format = "%d.%m.%y"), 
-                    Füllart                   = col_skip(), 
-                    `Neue Gerätezeit`         = col_skip(), 
-                    Rücklauf                  = col_skip(), 
-                    Unterbrechen              = col_skip(), 
-                    Zeit                      = col_time(format = "%H:%M:%S"), 
-                    Zeitstempel               = col_datetime(format = "%d.%m.%y %H:%M:%S"),
+                   Datum                     = col_date(format = "%d.%m.%y"), 
+                   Füllart                   = col_skip(), 
+                   `Neue Gerätezeit`         = col_skip(), 
+                   Rücklauf                  = col_skip(), 
+                   Unterbrechen              = col_skip(), 
+                   Zeit                      = col_time(format = "%H:%M:%S"), 
+                   Zeitstempel               = col_datetime(format = "%d.%m.%y %H:%M:%S"),
                    `ID des verb. BZ-Messgeräts`  = col_skip(), 
                    `Dauer Temp Basal (hh:mm:ss)` = col_time(format = "%H:%M:%S"),
                    `BolusExpert: Hoher BZ-Grenzwert (mg/dl)`     = col_skip(), 
@@ -27,31 +29,32 @@ sugr <- read_csv(
   skip = 10)[1:19] 
 
 
+
 ## extract labels for later use
-labels <- names(sugr)
+labels <- names(neu)
 
 
 ## change names to something useful
-names(sugr) <- recode(names(sugr), 
-  `BZ-Messwert (mg/dl)`                         = "BZ_Wert",
-  `Tempor. Basalrate (IE/h)`                    = "Temp_Basal_IE",
-  `Dauer Temp Basal (hh:mm:ss)`                 = "Temp_Basal_Dauer",
-  `Gewähltes Bolusvolumen (IE)`                 = "Bolus_gewaehlt",
-  `Abgegebene Bolusmenge (IE)`                  = "Bolus_abgegeben",
-  `Bolusdauer (hh:mm:ss)`                       = "Bolusdauer",
-  `Abgegebenes Füllvolumen (IE)`                = "Abgegebene_Fuellung",
-  `BolusExpert-Schätzung (IE)`                  = "BE_Schaetzung",
-  `BolusExpert: KH-Faktor (Gramm)`              = "BE_KH_Faktor_gramm",
-  `BolusExpert: KH-Eingabe (Gramm)`             = "BE_KH",
-  `BolusExpert: BZ-Eingabe (mg/dl)`             = "BE_BZ",
-  `BolusExpert: Geschätzte Korrektur (IE)`      = "BE_Korrektur",
-  `BolusExpert: geschätzte Nahrung (IE)`        = "BE_Nahrung",
-  `BolusExpert: Aktives Insulin (IE)`           = "BE_aktives_Insulin"
-  )
+names(neu) <- recode(names(neu), 
+                      `BZ-Messwert (mg/dl)`                         = "BZ_Wert",
+                      `Tempor. Basalrate (IE/h)`                    = "Temp_Basal_IE",
+                      `Dauer Temp Basal (hh:mm:ss)`                 = "Temp_Basal_Dauer",
+                      `Gewähltes Bolusvolumen (IE)`                 = "Bolus_gewaehlt",
+                      `Abgegebene Bolusmenge (IE)`                  = "Bolus_abgegeben",
+                      `Bolusdauer (hh:mm:ss)`                       = "Bolusdauer",
+                      `Abgegebenes Füllvolumen (IE)`                = "Abgegebene_Fuellung",
+                      `BolusExpert-Schätzung (IE)`                  = "BE_Schaetzung",
+                      `BolusExpert: KH-Faktor (Gramm)`              = "BE_KH_Faktor_gramm",
+                      `BolusExpert: KH-Eingabe (Gramm)`             = "BE_KH",
+                      `BolusExpert: BZ-Eingabe (mg/dl)`             = "BE_BZ",
+                      `BolusExpert: Geschätzte Korrektur (IE)`      = "BE_Korrektur",
+                      `BolusExpert: geschätzte Nahrung (IE)`        = "BE_Nahrung",
+                      `BolusExpert: Aktives Insulin (IE)`           = "BE_aktives_Insulin"
+)
 
 
 ## replace commas with points & convert to numeric
-sugr <- sugr %>% 
+neu <- neu %>% 
   mutate(Bolus_gewaehlt  = as.numeric(str_replace(Bolus_gewaehlt, ",", ".")),
          Bolus_abgegeben = as.numeric(str_replace(Bolus_abgegeben, ",", ".")),
          BE_Schaetzung   = as.numeric(str_replace(BE_Schaetzung, ",", ".")),
@@ -61,23 +64,23 @@ sugr <- sugr %>%
 
 
 ## add some info, convert KH/IE to IE/BE (and fix decimals in the process)
-sugr <- sugr %>% 
-  mutate(Monat      = month(Zeitstempel, label = T, abbr = F),
+neu <- neu %>% 
+  mutate(Jahr       = year(Zeitstempel),
+         Monat      = month(Zeitstempel, label = T, abbr = F),
          Wochentag  = wday(Datum, label = T, abbr = F),
          BZ_Bereich = cut(BZ_Wert, breaks = c(-Inf, 80, 160, Inf), ordered_result = T,
                           labels = c("zu niedrig", "in Ordnung", "zu hoch")),
          BE_KH      = round(ifelse(nchar(BE_KH) > 2, 
-                                         BE_KH / 150, 
-                                         BE_KH / 15), 2),
+                                   BE_KH / 150, 
+                                   BE_KH / 15), 2),
          BE_KH_Faktor_gramm = round(ifelse(nchar(BE_KH_Faktor_gramm) > 2, 
                                            BE_KH_Faktor_gramm / 150, 
                                            BE_KH_Faktor_gramm / 15), 2)
-         )
+  )
 
 
 ## well, set labels
-sugr <- set_label(sugr, c(labels, "Monat", "Wochentag", "Blutzuckerbereich"))
-rm(labels)
+neu <- set_label(neu, c(labels, "Jahr", "Monat", "Wochentag", "Blutzuckerbereich"))
 
 
 ## create Basalraten-Dataframe
@@ -96,7 +99,7 @@ base <- data.frame(
 
 
 ## filter for BolusExpert data & "fix" decimals
-bexpert <- filter(sugr, !is.na(BE_KH))
+neu_bexpert <- filter(neu, !is.na(BE_KH))
 
 # bexpert$BE_KH[nchar(bexpert$BE_KH) > 2] <- 
 #   bexpert$BE_KH[nchar(bexpert$BE_KH) > 2] / 10
@@ -105,7 +108,14 @@ bexpert <- filter(sugr, !is.na(BE_KH))
 #   bexpert$BE_KH_Faktor_gramm[nchar(bexpert$BE_KH_Faktor_gramm) > 2] / 10
 
 
-## save to file
-saveRDS(sugr, "./data/sugr.rds")
+## bind new to old data
+neu         <- rbind(alt, neu)
+neu_bexpert <- rbind(alt_bexpert, neu_bexpert)
+
+
+## save to file & clean up environment
+saveRDS(neu, "./data/all_sugr.rds")
 saveRDS(base, "./data/base.rds")
-saveRDS(bexpert, "./data/bexpert.rds")
+saveRDS(neu_bexpert, "./data/all_bexpert.rds")
+
+rm(alt, alt_bexpert, base, labels, neu, neu_bexpert)
