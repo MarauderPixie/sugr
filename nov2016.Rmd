@@ -26,9 +26,9 @@ library(viridis)
 library(tadaatoolbox)
 
 ## read data
-sugr    <- readRDS("./data/sugr.rds")
+sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "November", Jahr == "2016")
 base    <- readRDS("./data/base.rds")
-bexpert <- readRDS("./data/bexpert.rds")
+bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "November", Jahr == "2016")
 
 ## prepare cosmetics
 theme_set(theme_readthedown(bg = "#FFFFFF") +

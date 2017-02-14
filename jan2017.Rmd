@@ -1,5 +1,5 @@
 ---
-title: "Blood Glucose Diary of January 2017"
+title: "Glucose Diary of January 2017"
 output: 
   html_document:
     toc: true
@@ -26,9 +26,9 @@ library(viridis)
 library(tadaatoolbox)
 
 ## read data
-sugr    <- readRDS("./data/sugr.rds")
+sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "January", Jahr == "2017")
 base    <- readRDS("./data/base.rds")
-bexpert <- readRDS("./data/bexpert.rds")
+bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "January", Jahr == "2017")
 
 ## prepare cosmetics
 theme_set(theme_readthedown(bg = "#FFFFFF") +
