@@ -8,6 +8,8 @@ output:
 ## knitr options setzen
 knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
                       fig.path = "assets/dec2016_files/")
+options(digits = 3)
+
 
 ## toolbox etc
 library(dplyr)
@@ -19,10 +21,12 @@ library(ggthemes)
 library(viridis)
 library(tadaatoolbox)
 
+
 ## read data
 sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "December", Jahr == "2016")
 base    <- readRDS("./data/base.rds")
 bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "December", Jahr == "2016")
+
 
 ## prepare cosmetics
 theme_set(theme_readthedown(bg = "#FFFFFF") +
