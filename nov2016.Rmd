@@ -1,5 +1,5 @@
 ---
-title: "Blood Glucose Diary of December 2016"
+title: "Blood Glucose Diary of November 2016"
 output: 
   html_document:
     toc: true

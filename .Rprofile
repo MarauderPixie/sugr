@@ -6,7 +6,7 @@
 .First <- function() {
   options(
     repos = c(CRAN = "https://cran.rstudio.com/"),
-    setwd("~/Dropbox/Dokumente/tadaa-data/sugr"),
+    setwd(getwd()),
     deparse.max.lines = 2)
 }
 
