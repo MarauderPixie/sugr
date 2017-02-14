@@ -1,15 +1,12 @@
 #! /usr/bin/env Rscript
-rmarkdown::render(input         = "./for_starters.Rmd",
-                  output_format = "html_document")
+rmarkdown::render_site(input = ".")
 
 # Collect output files
-
-out_docs   <- paste0("./", c(list.files(path = "./", pattern = "*.html")))
-out_assets <- c("assets", "for_starters_files")
+out_docs   <- paste0("./_site/", c(list.files(path = "_site/", pattern = "*.html")))
+out_assets <- c("assets", "_site/site_libs")
 
 
 # Copy files to btsync directory
-
 out_dir <- "~/Dokumente/syncthing/tobi.tadaa-data.de/sugr/"
 
 sapply(out_docs,   file.copy, to = out_dir, overwrite = T, recursive = F)
