@@ -93,7 +93,7 @@ sugr %>%
     scale_color_viridis()
 ```
 
-Ich steh zu hoch auf und geh auch etwas zu hoch schlafen. Ersteres scheint generell der Fall zu sein, dagegen muss ich angehen. Zweiteres hat aber eine ordentliche Streuung, gibt es eventuell betimmte Tagestrends?
+The most obvious change is the drastic reduction in measurements: where in _December 2016_ I checked **205** times, in _January 2017_ it's only a meager **85**, meaning a whooping decrease of about **59%**! Apart from that, my trend stabilized a bit, which sadly seems to be the case because the ok-part in the afternoon went up and the generally too high measurements in the morning got exchanged for some **_really_** low ones, so they just level out on average. Which is, to say, pretty _meh_, if not worse than before... On the other hand, my glucose levels seem to be quite ok from 12 to about 8 pm, which is actually quite good. Still a little too high, but in an acceptable range.
 
 ## pro Tag
 
