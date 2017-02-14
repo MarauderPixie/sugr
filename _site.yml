@@ -1,0 +1,28 @@
+name: "Glucose Diary"
+navbar:
+  title: "Glucose Diary"
+  left:
+    - text: "Home"
+      icon: ion-aperture
+      href: index.html
+    - text: "Reports 2016"
+      icon: fa-heartbeat
+      menu:
+      - text: "November"
+        href: nov2016.html
+      - text: "December"
+        href: dec2016.html
+    - text: "Reports 2017"
+      icon: fa-cubes
+      menu:
+      - text: "January"
+        href: jan2017.html
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    self_contained: no
+    lib_dir: "assets"
+    fig_width: 10
+    dpi: 540
+    theme: lumen
