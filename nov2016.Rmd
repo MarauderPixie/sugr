@@ -93,8 +93,6 @@ sugr %>%
     scale_color_viridis()
 ```
 
-Ich steh zu hoch auf und geh auch etwas zu hoch schlafen. Ersteres scheint generell der Fall zu sein, dagegen muss ich angehen. Zweiteres hat aber eine ordentliche Streuung, gibt es eventuell betimmte Tagestrends?
-
 ## pro Tag
 
 ```{r BZ_pro_Tag, fig.height=12}
@@ -113,11 +111,6 @@ sugr %>%
     facet_wrap(~Wochentag, ncol = 2) +
     scale_color_viridis()
 ```
-
-Das Gesamtbild bleibt in etwa das gleiche, allerdings zeigen sich ein paar interessante Bilder:
-
-Freitags, Samstags und Dienstags ist das hoch rausgehen am deutlichsten. Wenig überraschend: Am Wochenende werden viele Biere konsumiert. Warum es allerdings montags so weit runter und donnerstags so wiet hoch geht, ist mir völlig unklar, lässt sich aber ja weiter beobachten.
-
 
 ## schräge _BolusExpert_-Messungen
 
@@ -176,15 +169,6 @@ ggplot(aes(x = Messung, y = Mean, color = Messung, fill = Messung)) +
 
 ## Bolusarten
 
-Unter _"Bolusarten"_ verstehe ich die drei verschiedenen Modi, in denen die Pumpe die Abgabe festhält:
-
-1. die von _BolusExpert_ geschätzte Insulinmenge, die benötigt wird
-2. die von der Pumpe angeforderte Menge Insulin
-3. die **tatsächlich** abgegebene Menge Insulin
-
-Die angeforderte und die tatsächlich abgegebene Menge ist erwatungsgemäß Deckungsgleich ($r =$ `r cor(sugr$Bolus_abgegeben, sugr$Bolus_gewaehlt, use = "complete.obs")`), dementsprechend werden für die weiteren Beobachtungen jeweils die Werte der tatsächlich abgegebenen Menge verwendet.  
-Spannender ist der Unterschied zwischen der _BolusExpert_-Schätzung und der abgegebenen Menge: Zum einen sind die Werte erstaunlich oft **nicht** identisch und zum anderen tauchen mal diese und mal jene auf:
-
 ```{r Bolusarten_Messungen}
 sugr %>% 
   gather(Messung, Bolus, Bolus_abgegeben, BE_Schaetzung) %>% 
@@ -199,7 +183,6 @@ sugr %>%
     scale_color_viridis(discrete = T)
 ```
 
-Was genau der Unterschied zwischen den beiden Varianten ist, ist mir noch unklar. Ein t-Test auf die Modi ergibt zumindest weder ein signifikantes Ergebnis, noch eine nennenswerte Effektröße, und das trotz der verhältnismäßig großen Gruppen von jeweils etwa 235 Beobachtungen:
 
 ```{r Bolusarten_t_test}
 t_test <- sugr %>% 
