@@ -1,14 +1,7 @@
 ---
-title: "Blood Glucose Diary of December 2016"
+title: "Glucose Diary of December 2016"
 output: 
-  html_document:
-    toc: true
-    toc_float: true
-    self_contained: no
-    lib_dir: "assets"
-    fig_width: 10
-    dpi: 540
-    theme: sandstone
+  html_document
 ---
 
 ```{r init, echo = F, message=F, warning=F}
