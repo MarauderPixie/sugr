@@ -1,32 +1,27 @@
 ## Print this on start so I know it's loaded.
-## cat("Loading custom .Rprofile")  
+## cat("Loading custom .Rprofile")
 
 
-## A little gem from Hadley Wickam that will set your CRAN mirror and automatically load devtools in interactive sessions.
-.First <- function() {
-  options(
-    repos = c(CRAN = "https://cran.rstudio.com/"),
-    setwd(getwd()),
-    deparse.max.lines = 2)
-}
+### Misc options
+options(stringsAsFactors = FALSE)         # Doing the right(eous) thing.
 
-if (interactive()) {
-  suppressMessages(require(devtools))
-}
+
+### Prompt
+options(prompt = sample(c("☉ ", "♫ ", "⚒ ", "⚙ "), 1),
+        continue = "   ↳ ")
 
 
 ### Startup
 startup <- function(){
   version     <- R.Version()
-  date_string <- Sys.Date()
+  # date_string <- format(Sys.Date(), "%A, der %d. %B %Y")
   ddate       <- ddateR::ddate()
 
-  msg1 <- sprintf("Oh, it's you again. Let's crunch some numbers! \nThis is %s.\nToday is %s, %s.\nOr like the Discordians like to say:\n%s",
-                  version$version.string,
-                  format(date_string, "%A"),
-                  date_string,
-                  ddate)
-  cat(msg1, "\n")
+  msg <- sprintf("Oh hello! Great to see you again!\n%s
+                  \nYou're working with %s. Let's crunch some numbers!",
+                 ddate, version$nickname)
+
+  cat(paste0("\014", msg, "\n\n"))
 }
 
 startup()
@@ -34,5 +29,5 @@ rm(startup)
 
 
 ### Packages
-suppressPackageStartupMessages(library("devtools"))
+# suppressPackageStartupMessages(library("devtools"))
 suppressPackageStartupMessages(library("ddateR"))
