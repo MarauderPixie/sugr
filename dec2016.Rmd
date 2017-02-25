@@ -29,8 +29,8 @@ bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "December", Jah
 
 
 ## prepare cosmetics
-theme_set(theme_readthedown(bg = "#FFFFFF") +
-            theme(legend.position = "top"))
+source("./assets/theme_tut.R")
+theme_set(theme_tut(size = 12))
 ```
 
 
