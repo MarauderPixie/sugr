@@ -5,15 +5,83 @@ output:
     toc: false
 ---
 
-## ohai!
+```{r init, echo = F, message=F, warning=F}
+## knitr options setzen
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
+                      fig.path = "assets/index_files/")
+options(digits = 3)
 
-This is my attempt to keep track of my Glucose levels and insulin intakes and all that. 
+
+## toolbox etc
+library(ggplot2)
+library(plotly)
+
+
+## read data
+base    <- readRDS("./data/base.rds")
+
+
+## prepare cosmetics
+source("./assets/theme_tut.R")
+theme_set(theme_tut(size = 12))
+```
+
+# Introduction
+
+This is my attempt to keep track of my glucose levels, insulin & carbohydrate intakes and all that. The data usually gets updated within the first few days of a month.
 
 My pump model is: **Medtronic MiniMed 640G**  
-My Glucose Meter is: **Medtronic Contour next link**
+My glucose meter is: **Medtronic Contour next link**
+
+Medtronic provides a pretty neat web interface to read and upload all data tracked by the pump. Even better though is the possibility to export an already very tidy _csv_ file (apart from a few minor quirks regarding the data itself) which makes importing to **R** pretty comfortable.
 
 
-## To-Do:
+# Bread Exchange & Basal Rate
 
-- translate stuff
+## BE-Factor
+
+  Time Range  | IU/BE
+--------------|--------
+ 0:00 -  8:00 | 1.5
+ 8:00 - 12:00 | 1.25
+12:00 - 14:00 | 1.7
+14:00 - 15:30 | 1.5
+15:30 - 18:00 | 1.15
+18:00 - 24:00 | 1.5
+
+04. March '17: _maybe lower 1.7 to 1.55 from 12:00 to 14:00_
+
+
+## Current Basal Rate Profile
+
+```{r rahmen_base1, eval = F}
+ggplot(base, aes(x = Uhrzeit, y = Rate_2, group = 1)) +
+  geom_line(linejoin = "round") +
+  geom_point(size = 3, color = "#66cc00") +
+  labs(x = "Uhrzeit", y = "Basalrate (IE/h)", 
+       title = "Basalratenprofil 1", 
+       subtitle = paste("Tagesgesamtmenge:", sum(base$Rate_2), "IE"))
+```
+
+```{r rahmen_base2}
+hover <- ~paste("until<b>", Uhrzeit, "</b>o'clock:",
+                "<br /><b>", Rate_2, "IU</b>")
+
+plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_2) %>%
+  add_lines(color = I("#66cc00"), hoverinfo = "none", showlegend = F) %>% 
+  add_markers(color = I("black"), hoverinfo = "none", size = I(12), 
+              showlegend = F) %>% 
+  add_markers(color = I("#66cc00"), size = I(10), 
+              hoverinfo = "text", text = hover) %>% 
+  layout(title = "Basal rate configuration 1", 
+         xaxis = list(title = "Time"),
+         yaxis = list(title = "Basal rate (IU/h)"), 
+         hovermode = "closest", autosize = T, showlegend = F) %>% 
+  config(displayModeBar = F)
+```
+
+
+# To-Do:
+
+- figure out why basal rate config plot is broken when knitted
 - maybe switch theme to `sandstone`

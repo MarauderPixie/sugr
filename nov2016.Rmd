@@ -33,44 +33,6 @@ source("./assets/theme_tut.R")
 theme_set(theme_tut(size = 12))
 ```
 
-
-# Rahmendaten
-
-## BE-Faktor
-
-Zeitraum      | IE/BE
---------------|--------
- 0:00 -  8:00 | 1,5
- 8:00 - 12:00 | 1.25
-12:00 - 14:00 | 1.7
-14:00 - 15:30 | 1.5
-15:30 - 18:00 | 1.15
-18:00 - 24:00 | 1.5
-
-
-## Basalratenprofil(e)
-
-```{r rahmen_base1}
-ggplot(base, aes(x = Uhrzeit, y = Rate_2, group = 1)) +
-  geom_line(linejoin = "round") +
-  geom_point(size = 3, color = "cadetblue") +
-  labs(x = "Uhrzeit", y = "Basalrate (IE/h)", 
-       title = "Basalratenprofil 1", 
-       subtitle = paste("Tagesgesamtmenge:", sum(base$Rate_2), "IE"))
-
-
-hover <- ~paste0("bis <b>", Uhrzeit, "</b> Uhr:",
-                 "<br /><b>", Rate_2, " IE</b>")
-
-plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_2) %>%
-  add_lines(color = I("black")) %>% 
-  add_markers(color = I("cadetblue"), size = I(12), 
-              hoverinfo = "hover", text = hover) %>% 
-  layout(title = "Basalratenprofil 1", xaxis = list(title = "Uhrzeit"),
-         yaxis = list(title = "Basalrate (IE/h)"), hovermode = "closest",
-         autosize = T, showlegend = F)
-```
-
 # Blutzuckerverläufe
 
 ## Alle Messungen
@@ -89,6 +51,7 @@ sugr %>%
     scale_x_continuous(labels = seq(0, 24, 4), 
                        breaks = seq(0, 86400, 14400), 
                        minor_breaks = seq(0, 86400, 7200)) +
+    scale_y_continuous(limits = c(0, NA)) +
     labs(x = "Uhrzeit", y = "Blutzucker (mg/dl)", color = "Blutzucker (mg/dl)") +
     scale_color_viridis()
 ```
