@@ -1,0 +1,247 @@
+---
+title: "Glucose Diary of February 2017"
+output: 
+  html_document
+---
+
+```{r init, echo = F, message=F, warning=F}
+## knitr options setzen
+knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
+                      fig.path = "assets/feb2017_files/")
+options(digits = 3)
+
+
+## toolbox etc
+library(dplyr)
+library(tidyr)
+library(sjPlot)
+library(ggplot2)
+library(plotly)
+library(ggthemes)
+library(viridis)
+library(tadaatoolbox)
+
+
+## read data
+sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "February", Jahr == "2017")
+base    <- readRDS("./data/base.rds")
+bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "February", Jahr == "2017")
+
+
+## prepare cosmetics
+source("./assets/theme_tut.R")
+theme_set(theme_tut(size = 12))
+```
+
+# Overviews
+
+## Averages
+
+```{r overview_table}
+by_days <-  sugr %>% 
+  group_by(Datum) %>% 
+  summarize(
+    mean_bz = mean(BZ_Wert, na.rm = T),
+    sum_be  = sum(BE_KH, na.rm = T),
+    sum_ie  = sum(BE_Schaetzung, na.rm = T)
+    )
+
+by_days %>% 
+  summarize(
+    "∅ Glucose Level (mg/dl)" = mean(mean_bz), 
+    "∅ BE" = mean(sum_be), 
+    "∅ IU" = mean(sum_ie)) %>% 
+  knitr::kable(caption = "Daily averages")
+```
+
+## Monthly development
+
+```{r overview_month}
+outliers <- sugr %>% 
+  filter(!is.na(BZ_Wert), BZ_Wert > 350) %>% 
+  summarize(n = n()) %>% 
+  .$n
+
+ggplot(sugr[!is.na(sugr$BZ_Wert) & sugr$BZ_Wert < 350,], 
+       aes(x = Datum, y = BZ_Wert)) + 
+  geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
+  geom_jitter(width = .2, alpha = .5, size = 1.5, color = "#66cc00") +
+  geom_smooth(method = "loess", se = T, color = "#9966ff", fill = "#9966ff", alpha = .2) +
+  scale_x_date(date_breaks = "1 week", date_minor_breaks = "1 day",
+               date_labels = "%b '%d") +
+  labs(title = paste0("Overview of ", unique(sugr$Monat), " ", unique(sugr$Jahr), "¹"),
+       subtitle = "red dashes show target range",
+       y = "glucose level (mg/dl)", x = "Date",
+       caption = paste("¹", outliers, "measurements above 350 mg/dl taken out"))
+```
+
+## Glucose ranges by day
+
+```{r overview_boxplot}
+ggplot(sugr[!is.na(sugr$BZ_Wert) & sugr$BZ_Wert < 350,], 
+       aes(x = Wochentag, y = BZ_Wert, color = Wochentag, fill = Wochentag)) +
+  geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
+  geom_boxplot(alpha = .1) +
+  geom_jitter(width = .2, alpha = .4, size = 1.5) +
+  scale_fill_viridis(discrete = T, option = "C") +
+  scale_color_viridis(discrete = T, option = "C") +
+  labs(title = "Overview of glucose ranges by day¹", y = "glucose level (mg/dl)",
+       subtitle = "red dashes show target range", x = NULL,
+       caption = paste("¹", outliers, "measurements above 350 mg/dl taken out")) +
+  theme(legend.position = "none")
+```
+
+# Closer look at measurements
+
+## All measurements
+
+Let's take a look at the development of an average day:
+
+```{r BZ_Gesamt}
+sugr %>% 
+  filter(BZ_Wert < 350, !is.na(BZ_Wert)) %>% 
+  ggplot(aes(x = Zeit, y = BZ_Wert)) + 
+    annotate("rect", fill = "black", alpha = .1,
+             xmin = 7201, xmax = 28800, ymin = 0, ymax = Inf) +
+    geom_point(size = 1.5, alpha = .4, color = "#66cc00") +
+    geom_smooth(method = "loess", color = "#9966ff", fill = "#9966ff", alpha = 0.2) +
+    geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
+    scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
+                       breaks = seq(0, 86400, 14400), 
+                       minor_breaks = seq(0, 86400, 7200)) +
+    labs(title = "Average daily glucose development¹", x = "Time", y = "glucose level (mg/dl)",
+         caption = paste("¹", outliers, "measurements above 350 mg/dl taken out"))
+```
+
+On average (the line and it's "shadow") it looks pretty okay, even though levels are a bit too high over all; especially in the evening. hHaving a closer look at the actual measurements additionally shows too many high levels when getting up in the morning (or what counts as such for a student) and an unsettling mix of too many too high as well as too low levels in the early afternoon.  
+Most high levels in the evening should be explainable by alcohol consumption (I'll have a look at that in the next section), whereas the many lows later on happen independently. The next step should therefore be checking my basal rate configuration for that time period.
+
+## by weekday
+
+Let's continue with looking at the weekdays. It's only reasonable to expect different developments on different days (i.e. working days and weekends).
+
+```{r BZ_pro_Tag, fig.height=12}
+sugr %>% 
+  filter(BZ_Wert < 350, !is.na(BZ_Wert)) %>% 
+  ggplot(aes(x = Zeit, y = BZ_Wert, color = BZ_Wert)) + 
+    annotate("rect", fill = "black", alpha = .1,
+             xmin = 7201, xmax = 28800, ymin = 0, ymax= Inf) +
+    geom_point(size = 1.5, alpha = .4, color = "#66cc00") +
+    geom_smooth(method = "loess", color = "#9966ff", fill = "#9966ff", alpha = 0.2) +
+    geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+    scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
+                       breaks = seq(0, 86400, 14400), 
+                       minor_breaks = seq(0, 86400, 7200)) +
+    scale_y_continuous(limits = c(0, NA)) +
+    labs(title = "Average glucose development by weekday¹", x = "Time", y = "glucose level (mg/dl)",
+         caption = paste("¹", outliers, "measurements above 350 mg/dl taken out")) +
+    facet_wrap(~Wochentag, ncol = 2)
+```
+
+Since I put aside high levels in the evening due to alcohol before, this is rather unexpected: the most typical day to have a drink (or two) to me is **Tuesday** (don't ask, student's life, yaddayadda...). Fri- & Saturdays too, but this month not so much because of the exam period. Also, come to think of it, when going out I tend to not look at my glucose level so much (or at all) since I already _know_ them to be high (or at least I do expect them to be).  
+The biggest problem to me seems to be the overall tendency to end the day with too high levels, so without further trying to read the cards, I will tackle that problem first.
+
+## Weird _BolusExpert_-measures
+
+Now this is really somethring I'm scratching my head over: the pump seems to have two ways to measure glucose levels (or at least there are two columns with different timestamps and values). The first is a somewhat _"regular"_ column internally called ``r sjmisc::get_label(sugr$BZ_Wert)[[1]]`` and another one called ``r sjmisc::get_label(sugr$BE_BZ)[[1]]`` (translated _"GL-Measurement"_ and _"BolusExpert: GL-Input"_ respectively).  
+This much I get: _"BolusExpert"_ is the name of the little helper software of the pump, which does calculation of needed IUs or correction-IUs and factors in already/still active insulin and such. Sometimes I just take a measurement and don't go on with anything else; sometimes I just want to eat something but don't look at my GL first - this at least would explain _"regular"_ measurements without _"Bolusexpert"_-entries and _BE_-GL-values of zero.  
+
+What really bothers me, though, is the difference between the two measurements:
+
+```{r BZ_BE_tbl}
+t <- sugr %>% 
+  gather(Measurement, Wert, BZ_Wert, BE_BZ) %>% 
+  mutate(Measurement = recode(Measurement, "BE_BZ" = "BolusExpert", "BZ_Wert" = "Regular")) %>% 
+  filter(Wert > 0)
+
+t %>% 
+  group_by(Measurement) %>% 
+  summarize(N    = n(),
+            Mean = mean(Wert),
+            SEM  = sd(Wert)/sqrt(n()),
+            SD   = sd(Wert)) %>% 
+  knitr::kable(digits = 2)
+```
+
+```{r BZ_BE_timeline}
+ggplot(t, aes(x = Zeit, y = Wert, color = Measurement, fill = Measurement)) +
+  annotate("rect", fill = "black", alpha = .1,
+           xmin = 7201, xmax = 28800, ymin = 0, ymax= Inf) +
+  geom_smooth(method = "loess", alpha = .2) +
+  geom_point(size = 1.5, alpha = .5) +
+  geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+  scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
+                     breaks = seq(0, 86400, 14400), 
+                     minor_breaks = seq(0, 86400, 7200)) +
+  labs(x = "Time", y = "glucose level (mg/dl)") +
+  scale_color_viridis(discrete = T) +
+  scale_fill_viridis(discrete = T)
+```
+
+```{r BZ_BE_bar}
+t %>% 
+  group_by(Measurement) %>% 
+  summarize(N    = n(),
+            Mean = mean(Wert),
+            SEM  = sd(Wert)/sqrt(n()),
+            SD   = sd(Wert)) %>% 
+ggplot(aes(x = Measurement, y = Mean, color = Measurement, fill = Measurement)) +
+  geom_bar(stat = "identity", alpha = 0.4) +
+  geom_errorbar(aes(ymin = SEM * -1 + Mean, ymax = SEM + Mean),
+                size = 1, width = 0.7) +
+  labs(y = "glucose level (mg/dl)",
+       title = "Mean of Glucoselevel by Measurement-Method",
+       subtitle = "With Errorbars depicting the SEM") +
+  scale_color_viridis(discrete = T) +
+  scale_fill_viridis(discrete = T)
+```
+
+While their SDs and distribution stay roughly the same, the mean of both methods is almost 90 mg/dl apart. This is huge! While the difference in number of uses is most probably explained, as I said earlier, by measured levels that don't need any further attention (and thus no use of the _BolusExpert_), my only explanation to the huge difference in glucose levels is just the opposite of that: If mostly high levels get piped through _BE_ (i.e. for a corrective bolus output), it seems reasonable for the mean being so much higher.
+
+What is still bothering is the following:  
+Most _regular_ measurement entries get followed by an comparable or equal entry in the _BE_ column shortly after. This is to be expectet, since I need maybe a minute to properly react (i.e. calculate carbohydrates or just handling the pump). Curiously though, **_not every_** high _BE_-entry is preceded by an equally high _regular_ entry (comment on 04.03.17: _actually, I have to look into that; maybe the problem just resolves itself if it is, after all_). Why is that? What? How? Sad!
+
+
+
+# _here be dragons:_ Bolus & BEs 
+
+This is really just fiddling around with the data; most doesn't make too much sense or is actually helpful to my analysis (but rather to my understanding of how the pump stores data). Therefore I won't even bother to update or translate it (for now). I will leave it here (also, for now) though; maybe it'll be useful?
+
+## Bolusarten
+
+Unter _"Bolusarten"_ verstehe ich die drei verschiedenen Modi, in denen die Pumpe die Abgabe festhält:
+
+1. die von _BolusExpert_ geschätzte Insulinmenge, die benötigt wird
+2. die von der Pumpe angeforderte Menge Insulin
+3. die **tatsächlich** abgegebene Menge Insulin
+
+Die angeforderte und die tatsächlich abgegebene Menge ist erwatungsgemäß Deckungsgleich ($r =$ `r cor(sugr$Bolus_abgegeben, sugr$Bolus_gewaehlt, use = "complete.obs")`), dementsprechend werden für die weiteren Beobachtungen jeweils die Werte der tatsächlich abgegebenen Menge verwendet.  
+Spannender ist der Unterschied zwischen der _BolusExpert_-Schätzung und der abgegebenen Menge: Zum einen sind die Werte erstaunlich oft **nicht** identisch und zum anderen tauchen mal diese und mal jene auf:
+
+```{r Bolusarten_Messungen}
+sugr %>% 
+  gather(Messung, Bolus, Bolus_abgegeben, BE_Schaetzung) %>% 
+  select(Zeitstempel, Messung, Bolus) %>% 
+  filter(!is.na(Bolus)) %>% 
+  mutate(Messung = recode(Messung, "BE_Schaetzung" = "BolusExpert", "Bolus_abgegeben" = "tatsächlich abgegeben")) %>% 
+  ggplot(aes(x = Zeitstempel, y = Bolus, color = Messung)) + 
+    geom_point(alpha = 0.5) +
+    labs(title = "Abgegebene Menge Insulin",
+         subtitle = "nach Art der Messung",
+         x = "Datum", y = "Bolus (IE)") +
+    scale_color_viridis(discrete = T)
+```
+
+Was genau der Unterschied zwischen den beiden Varianten ist, ist mir noch unklar. Ein t-Test auf die Modi ergibt zumindest weder ein signifikantes Ergebnis, noch eine nennenswerte Effektröße, und das trotz der verhältnismäßig großen Gruppen von jeweils etwa 235 Beobachtungen:
+
+```{r Bolusarten_t_test}
+t_test <- sugr %>% 
+  gather(Messung, Bolus, Bolus_abgegeben, BE_Schaetzung) %>% 
+  mutate(Messung = recode(Messung, "BE_Schaetzung" = "BolusExpert", "Bolus_abgegeben" = "tatsächlich abgegeben")) %>% 
+  filter(!is.na(Bolus))
+
+tadaa_t.test(t_test, Bolus, Messung, print = "markdown")
+rm(t_test)
+```
+
+

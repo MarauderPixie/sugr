@@ -17,6 +17,8 @@ navbar:
       menu:
       - text: "January"
         href: jan2017.html
+      - text: "February"
+        href: feb2017.html
 output:
   html_document:
     toc: true
