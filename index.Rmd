@@ -68,10 +68,11 @@ hover <- ~paste("until<b>", Uhrzeit, "</b>o'clock:",
                 "<br /><b>", Rate_2, "IU</b>")
 
 plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_2) %>%
-  add_lines(color = I("#66cc00"), hoverinfo = "none", showlegend = F) %>% 
-  add_markers(color = I("black"), hoverinfo = "none", size = I(12), 
+  add_lines(color = I("#66cc00"), hoverinfo = "text", 
+            text = hover, showlegend = F) %>% 
+  add_markers(color = I("black"), hoverinfo = "none", size = I(8), 
               showlegend = F) %>% 
-  add_markers(color = I("#66cc00"), size = I(10), 
+  add_markers(color = I("#66cc00"), size = I(6), 
               hoverinfo = "text", text = hover) %>% 
   layout(title = "Basal rate configuration 1", 
          xaxis = list(title = "Time"),
@@ -84,4 +85,5 @@ plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_2) %>%
 # To-Do:
 
 - figure out why basal rate config plot is broken when knitted
+- percentage of Bolus for food and for correction in "Overviews - Averages" table
 - maybe switch theme to `sandstone`
