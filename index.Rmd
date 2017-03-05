@@ -85,5 +85,4 @@ plot_ly(base, x = ~Uhrzeit/(60*60), y = ~Rate_2) %>%
 # To-Do:
 
 - figure out why basal rate config plot is broken when knitted
-- percentage of Bolus for food and for correction in "Overviews - Averages" table
 - maybe switch theme to `sandstone`

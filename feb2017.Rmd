@@ -43,14 +43,17 @@ by_days <-  sugr %>%
   summarize(
     mean_bz = mean(BZ_Wert, na.rm = T),
     sum_be  = sum(BE_KH, na.rm = T),
-    sum_ie  = sum(BE_Schaetzung, na.rm = T)
+    sum_ie  = sum(BE_Schaetzung, na.rm = T),
+    sum_kor = sum(BE_Korrektur, na.rm = T)
     )
 
 by_days %>% 
   summarize(
     "∅ Glucose Level (mg/dl)" = mean(mean_bz), 
     "∅ BE" = mean(sum_be), 
-    "∅ IU" = mean(sum_ie)) %>% 
+    "∅ IU" = mean(sum_ie),
+    "% of IU for Correction" = mean(sum_kor) / mean(sum_ie) * 100
+    ) %>% 
   knitr::kable(caption = "Daily averages")
 ```
 
