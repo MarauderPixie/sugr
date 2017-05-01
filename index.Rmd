@@ -40,16 +40,17 @@ Medtronic provides a pretty neat web interface to read and upload all data track
 
 ## BE-Factor
 
-  Time Range  | IU/BE
---------------|--------
- 0:00 -  8:00 | 1.5
- 8:00 - 12:00 | 1.25
-12:00 - 14:00 | 1.7
-14:00 - 15:30 | 1.5
-15:30 - 18:00 | 1.15
-18:00 - 24:00 | 1.5
+  Time Range  | IU/BE (now) | IU/BE (pre ~11.04.)
+--------------|-------------|---------------------
+ 0:00 -  8:00 | 1.5         | 1.5 
+ 8:00 - 12:00 | 1.1         | 1.25
+12:00 - 14:00 | 1.15        | 1.7
+14:00 - 15:30 | 1.1         | 1.5
+15:30 - 24:00 | 1.05        | 1.5
 
-04. March '17: _maybe lower 1.7 to 1.55 from 12:00 to 14:00_
+04. March '17: _maybe lower 1.7 to 1.55 from 12:00 to 14:00_  
+18. April '17: _big changes since the week before_  
+01. May '17: _even more changes; seems to be quite alright now_
 
 
 ## Current Basal Rate Profile
