@@ -1,0 +1,56 @@
+---
+title: "sugr Scribbles"
+output: html_notebook
+---
+
+
+```{r}
+# remove empty lines from dataframe
+sugr %>% 
+  filter(!(is.na(BE_BZ) & is.na(BE_Nahrung) & 
+             is.na(BE_KH) & is.na(Bolustyp) & is.na(BZ_Wert)))
+
+
+z_sugr <- sugr %>%
+  mutate(
+    BE_KH         = car::recode(BE_KH, "0.0 = NA"),
+    BE_Schaetzung = car::recode(BE_Schaetzung, "0.0 = NA"),
+    BE_Korrektur  = car::recode(BE_Korrektur, "0.0 = NA")
+    ) %>% 
+  mutate(
+    z_BE         = scale(BE_KH),
+    z_Insulin    = scale(BE_Schaetzung),
+    z_Blutzucker = scale(BZ_Wert),
+    z_Korrektur  = scale(BE_Korrektur)
+  ) %>% 
+  gather(Einheit, z_Wert, z_Blutzucker, z_Korrektur) %>% 
+  filter(!is.na(z_Wert))
+```
+
+
+```{r}
+ggplot(z_sugr, aes(x = Zeit, y = z_Wert, color = Einheit, fill = Einheit)) +
+  geom_hline(yintercept = c(-1, .5), color = "red", size = .5, linetype = "dashed") +
+  geom_point(alpha = .3, size = 1.5) +
+  geom_smooth(method = "loess", se = F) +
+  scale_y_continuous(sec.axis = sec_axis(trans = ~.*75.6+148, name = "Blutzucker (mg/dl)")) +
+  scale_x_continuous(labels = paste0(seq(0, 24, 2), ":00"),
+                     breaks = seq(0, 86400, 7200), 
+                     minor_breaks = seq(0, 86400, 1800)) +
+  scale_color_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Dark2") +
+  # scale_color_viridis(discrete = T, option = "D") +
+  labs(title = "I.E. & Blutzuckerwert")
+```
+
+
+## true fiddling
+
+```{r}
+# this gives Glucoselevels preceding a meal/snack, at least
+ifelse(!is.na(nona$BE_KH), lag(nona$BZ_Wert), NA)
+```
+
+not with a lot of success (or much ofan idea, though)...
+
+

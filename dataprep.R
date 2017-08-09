@@ -6,7 +6,7 @@ library(sjmisc)
 
 ## !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! ##
 ## step one: copy new file to data folder and rename to "neu"  ##
-## yes, manually.                                              ##
+##                       yes, manually.                        ##
 ## !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! !!! ##
 
 ## read & trim data
@@ -81,10 +81,6 @@ neu <- neu %>%
   )
 
 
-## well, set labels
-neu <- set_label(neu, c(labels, "Jahr", "Monat", "Wochentag", "Blutzuckerbereich"))
-
-
 ## create Basalraten-Dataframe
 ## Rate 2 in effect since 07.01.2017
 base <- data.frame(
@@ -113,6 +109,10 @@ neu_bexpert <- filter(neu, !is.na(BE_KH))
 ## bind new to old data
 neu         <- rbind(alt, neu)
 neu_bexpert <- rbind(alt_bexpert, neu_bexpert)
+
+
+## well, set labels
+neu <- set_label(neu, c(labels, "Jahr", "Monat", "Wochentag", "Blutzuckerbereich"))
 
 
 ## save to file & clean up environment

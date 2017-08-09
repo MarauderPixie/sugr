@@ -1,5 +1,5 @@
 ---
-title: "Glucose Diary of April 2017"
+title: "Glucose Diary of May 2017"
 output: 
   html_document
 ---
@@ -7,7 +7,7 @@ output:
 ```{r init, echo = F, message=F, warning=F}
 ## knitr options setzen
 knitr::opts_chunk$set(echo = F, warning = F, message = F, fig.align = "center",
-                      fig.path = "assets/apr2017_files/")
+                      fig.path = "assets/may2017_files/")
 options(digits = 3)
 
 
@@ -21,14 +21,14 @@ library(tadaatoolbox)
 
 
 ## read data
-sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "April", Jahr == "2017")
+sugr    <- readRDS("./data/all_sugr.rds") %>% filter(Monat == "May", Jahr == "2017")
 base    <- readRDS("./data/base.rds")
-bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "April", Jahr == "2017")
+bexpert <- readRDS("./data/all_bexpert.rds") %>% filter(Monat == "May", Jahr == "2017")
 
 
 ## prepare cosmetics
 source("./assets/theme_tut.R")
-theme_set(theme_tut(size = 12))
+theme_set(theme_tut(size = 14))
 ```
 
 # Overviews
@@ -57,6 +57,18 @@ by_days %>%
 
 ## Monthly development
 
+```{r table_month}
+sugr %>% 
+  filter(!is.na(BZ_Wert)) %>% 
+  summarise(
+    "∅ Glucose Level (mg/dl)" = mean(BZ_Wert),
+    "SD of Glucose Level"     = sd(BZ_Wert),
+    "Median of Glucose Level" = median(BZ_Wert),
+    "Measurements"            = length(BZ_Wert)
+  ) %>% 
+  knitr::kable(digits = 0, caption = "Monthly Stats")
+```
+
 ```{r overview_month}
 outliers <- sugr %>% 
   filter(!is.na(BZ_Wert), BZ_Wert > 350) %>% 
@@ -66,8 +78,9 @@ outliers <- sugr %>%
 ggplot(sugr[!is.na(sugr$BZ_Wert) & sugr$BZ_Wert < 350,], 
        aes(x = Datum, y = BZ_Wert)) + 
   geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
-  geom_jitter(width = .2, alpha = .5, size = 1.5, color = "#66cc00") +
-  geom_smooth(method = "loess", se = T, color = "#9966ff", fill = "#9966ff", alpha = .2) +
+  geom_jitter(width = .2, size = 1.5, alpha = .7, color = "#9C3848",
+              stroke = .8, fill = "white", shape = 21) +
+  geom_smooth(method = "loess", color = "#1E3888", fill = "#1E3888", alpha = 0.3) +
   scale_x_date(date_breaks = "1 week", date_minor_breaks = "1 day",
                date_labels = "%b '%d") +
   labs(title = paste0("Overview of ", unique(sugr$Monat), " ", unique(sugr$Jahr), "¹"),
@@ -75,21 +88,66 @@ ggplot(sugr[!is.na(sugr$BZ_Wert) & sugr$BZ_Wert < 350,],
        y = "glucose level (mg/dl)", x = "Date",
        caption = paste("¹", outliers, "measurements above 350 mg/dl taken out"))
 ```
+I count 6 days with no measurements below 80 mg/dl. Quite depressing. Way too many measurements on the upper end, too, albeit those can be explained by the usual hiccups: counter-reactions to low levels, miscalculated meals, alcohol, and so on.
 
 ## Glucose ranges by day
+
+```{r table_days}
+sugr %>% 
+  filter(!is.na(BZ_Wert)) %>% 
+  group_by(Wochentag) %>% 
+  summarise(
+    "∅ Glucose Level (mg/dl)" = mean(BZ_Wert),
+    "SD of Glucose Level"     = sd(BZ_Wert),
+    "Median of Glucose Level" = median(BZ_Wert),
+    # "Measurements below target range" = 
+    "Measurements"            = length(BZ_Wert)
+  ) %>% 
+  knitr::kable(digits = 0, caption = "Daily Stats")
+```
 
 ```{r overview_boxplot}
 ggplot(sugr[!is.na(sugr$BZ_Wert) & sugr$BZ_Wert < 350,], 
        aes(x = Wochentag, y = BZ_Wert, color = Wochentag, fill = Wochentag)) +
   geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
+  geom_jitter(width = .2, alpha = .5, size = 1.5, stroke = 1, fill = "white", shape = 21) +
   geom_boxplot(alpha = .1) +
-  geom_jitter(width = .2, alpha = .4, size = 1.5) +
   scale_fill_viridis(discrete = T, option = "C") +
   scale_color_viridis(discrete = T, option = "C") +
   labs(title = "Overview of glucose ranges by day¹", y = "glucose level (mg/dl)",
        subtitle = "red dashes show target range", x = NULL,
        caption = paste("¹", outliers, "measurements above 350 mg/dl taken out")) +
   theme(legend.position = "none")
+```
+
+I wonder what makes tuesdays as stable as they are?
+
+## Bolus-Base-Ratio by day
+
+```{r bbratio}
+sugr %>% 
+  mutate(
+    Bolus_Gesamt = BE_Schaetzung + BE_Korrektur
+  ) %>% 
+  group_by(Datum, Wochentag) %>% 
+  summarise(
+    p_bolus = sum(Bolus_Gesamt, na.rm = T) / (sum(Bolus_Gesamt, na.rm = T) + 12.05),
+    p_basal = 1 - p_bolus
+  ) %>% 
+  ungroup() %>% 
+  group_by(Wochentag) %>% 
+  summarise(
+    Bolus = mean(p_bolus),
+    Basal = mean(p_basal)
+  ) %>% 
+  gather(Insulinanteil, Prozent, Bolus, Basal) %>% 
+  ggplot(aes(x = Wochentag, y = Prozent, fill = Insulinanteil)) +
+    geom_bar(stat = "identity", alpha = .6) +
+    scale_y_continuous(labels = scales::percent, position = "right") +
+    scale_fill_viridis(discrete = T, direction = -1) +
+    labs(x = NULL, y = NULL, fill = NULL,
+         title = "Proportions of Base to Bolus") +
+    coord_flip()
 ```
 
 # Closer look at measurements
@@ -104,9 +162,10 @@ sugr %>%
   ggplot(aes(x = Zeit, y = BZ_Wert)) + 
     annotate("rect", fill = "black", alpha = .1,
              xmin = 1, xmax = 25200, ymin = 0, ymax = Inf) +
-    geom_point(size = 1.5, alpha = .4, color = "#66cc00") +
-    geom_smooth(method = "loess", color = "#9966ff", fill = "#9966ff", alpha = 0.2) +
     geom_hline(yintercept = c(75, 175), color = "red", size = .5, linetype = "dashed") +
+    geom_point(size = 1.5, alpha = .7, color = "#9C3848",
+               stroke = .8, fill = "white", shape = 21) +
+    geom_smooth(method = "loess", color = "#1E3888", fill = "#1E3888", alpha = 0.3) +
     scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
                        breaks = seq(0, 86400, 14400), 
                        minor_breaks = seq(0, 86400, 7200)) +
@@ -114,8 +173,7 @@ sugr %>%
          caption = paste("¹", outliers, "measurements above 350 mg/dl taken out"))
 ```
 
-On average (the line and it's "shadow") it looks pretty okay, even though levels are a bit too high over all; especially in the evening. hHaving a closer look at the actual measurements additionally shows too many high levels when getting up in the morning (or what counts as such for a student) and an unsettling mix of too many too high as well as too low levels in the early afternoon.  
-Most high levels in the evening should be explainable by alcohol consumption (I'll have a look at that in the next section), whereas the many lows later on happen independently. The next step should therefore be checking my basal rate configuration for that time period.
+Now this is seriously unsettling. I'm mostly fine while awake it seems (well, apart from all the hypos...), but before going to bed and when getting up again, my levels are way too high!
 
 ## by weekday
 
@@ -127,9 +185,10 @@ sugr %>%
   ggplot(aes(x = Zeit, y = BZ_Wert, color = BZ_Wert)) + 
     annotate("rect", fill = "black", alpha = .1,
              xmin = 1, xmax = 25200, ymin = 0, ymax= Inf) +
-    geom_point(size = 1.5, alpha = .4, color = "#66cc00") +
-    geom_smooth(method = "loess", color = "#9966ff", fill = "#9966ff", alpha = 0.2) +
+    geom_point(size = 1.5, alpha = .7, color = "#9C3848",
+               stroke = 1, fill = "white", shape = 21) +
     geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+    geom_smooth(method = "loess", color = "#1E3888", fill = "#1E3888", alpha = 0.3) +
     scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
                        breaks = seq(0, 86400, 14400), 
                        minor_breaks = seq(0, 86400, 7200)) +
@@ -144,7 +203,14 @@ The biggest problem to me seems to be the overall tendency to end the day with t
 
 ## Weird _BolusExpert_-measures
 
-Now this is really somethring I'm scratching my head over: the pump seems to have two ways to measure glucose levels (or at least there are two columns with different timestamps and values). The first is a somewhat _"regular"_ column internally called ``r sjmisc::get_label(sugr$BZ_Wert)[[1]]`` and another one called ``r sjmisc::get_label(sugr$BE_BZ)[[1]]`` (translated _"GL-Measurement"_ and _"BolusExpert: GL-Input"_ respectively).  
+### Ok, screw it, I guess?
+
+**05.06.2017:**  
+I haven't thought about this for quite some time, but today I did. Turns out: the difference in means is quite easy to explain: When all (or at least most) high measurements get handed on to the _BolusExpert_, but many low and okay measurements don't, the mean rises. So Captain Obvious strikes again!
+
+### Old Ponderings
+
+Now this is really something I'm scratching my head over: the pump seems to have two ways to measure glucose levels (or at least there are two columns with different timestamps and values). The first is a somewhat _"regular"_ column internally called ``r sjmisc::get_label(sugr$BZ_Wert)[[1]]`` and another one called ``r sjmisc::get_label(sugr$BE_BZ)[[1]]`` (translated _"GL-Measurement"_ and _"BolusExpert: GL-Input"_ respectively).  
 This much I get: _"BolusExpert"_ is the name of the little helper software of the pump, which does calculation of needed IUs or correction-IUs and factors in already/still active insulin and such. Sometimes I just take a measurement and don't go on with anything else; sometimes I just want to eat something but don't look at my GL first - this at least would explain _"regular"_ measurements without _"Bolusexpert"_-entries and _BE_-GL-values of zero.  
 
 What really bothers me, though, is the difference between the two measurements:
@@ -168,9 +234,9 @@ t %>%
 ggplot(t, aes(x = Zeit, y = Wert, color = Measurement, fill = Measurement)) +
   annotate("rect", fill = "black", alpha = .1,
            xmin = 1, xmax = 25200, ymin = 0, ymax= Inf) +
-  geom_smooth(method = "loess", alpha = .2) +
-  geom_point(size = 1.5, alpha = .5) +
   geom_hline(yintercept = c(80, 160), color = "red", size = .5, linetype = "dashed") +
+  geom_point(size = 1.5, alpha = .5, stroke = 1, fill = "white", shape = 21) +
+  geom_smooth(method = "loess", alpha = .2) +
   scale_x_continuous(labels = paste0(seq(0, 24, 4), ":00 h"),
                      breaks = seq(0, 86400, 14400), 
                      minor_breaks = seq(0, 86400, 7200)) +
@@ -188,16 +254,16 @@ t %>%
             SD   = sd(Wert)) %>% 
 ggplot(aes(x = Measurement, y = Mean, color = Measurement, fill = Measurement)) +
   geom_bar(stat = "identity", alpha = 0.4) +
-  geom_errorbar(aes(ymin = SEM * -1 + Mean, ymax = SEM + Mean),
+  geom_errorbar(aes(ymin = SD * -1 + Mean, ymax = SD + Mean),
                 size = 1, width = 0.7) +
   labs(y = "glucose level (mg/dl)",
        title = "Mean of Glucoselevel by Measurement-Method",
-       subtitle = "With Errorbars depicting the SEM") +
+       subtitle = "Errorbars depicting SD") +
   scale_color_viridis(discrete = T) +
   scale_fill_viridis(discrete = T)
 ```
 
 While their SDs and distribution stay roughly the same, the mean of both methods is almost 90 mg/dl apart. This is huge! While the difference in number of uses is most probably explained, as I said earlier, by measured levels that don't need any further attention (and thus no use of the _BolusExpert_), my only explanation to the huge difference in glucose levels is just the opposite of that: If mostly high levels get piped through _BE_ (i.e. for a corrective bolus output), it seems reasonable for the mean being so much higher.
 
-What is still bothering is the following:  
+What is still bothering me is the following:  
 Most _regular_ measurement entries get followed by an comparable or equal entry in the _BE_ column shortly after. This is to be expectet, since I need maybe a minute to properly react (i.e. calculate carbohydrates or just handling the pump). Curiously though, **_not every_** high _BE_-entry is preceded by an equally high _regular_ entry (comment on 04.03.17: _actually, I have to look into that; maybe the problem just resolves itself if it is, after all_). Why is that? What? How? Sad!
